@@ -7,6 +7,7 @@ import Jobs from "./pages/Jobs";
 import Remedials from "./pages/Remedials";
 import Calendar from "./pages/Calendar";
 import Customers from "./pages/Customers";
+import CreateJob from "./pages/CreateJob";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -42,6 +43,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Jobs />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/create"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CreateJob />
               </Layout>
             </ProtectedRoute>
           }

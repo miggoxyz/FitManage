@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const authRoutes = require("./routes/authRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const jobRoutes = require("./routes/jobRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/jobs", jobRoutes);
+app.use("/api/users", userRoutes);
 
 // Basic route for testing
 app.get("/", (req, res) => {

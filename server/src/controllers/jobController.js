@@ -20,7 +20,6 @@ const getJob = async (req, res) => {
 const getJobs = async (req, res) => {
   const userId = req.user.id;
   const userRole = req.user.role;
-  console.log(userId);
 
   try {
     let jobs;
@@ -29,21 +28,25 @@ const getJobs = async (req, res) => {
       // Admin can see all jobs
       jobs = await db("jobs")
         .join("customers", "jobs.customer_id", "customers.id")
+        .leftJoin("users", "jobs.fitter_id", "users.id")
         .select(
           "jobs.*",
           "customers.name as customer_name",
           "customers.contact_details as customer_contact",
-          "customers.address as customer_address"
+          "customers.address as customer_address",
+          "users.name as fitter_name"
         );
     } else if (userRole === "fitter") {
       jobs = await db("jobs")
         .where("jobs.fitter_id", userId)
         .join("customers", "jobs.customer_id", "customers.id")
+        .leftJoin("users", "jobs.fitter_id", "users.id")
         .select(
           "jobs.*",
           "customers.name as customer_name",
           "customers.contact_details as customer_contact",
-          "customers.address as customer_address"
+          "customers.address as customer_address",
+          "users.name as fitter_name"
         );
     } else {
       return res
@@ -82,27 +85,16 @@ const updateJob = async (req, res) => {
   }
 };
 
-const deleteJob = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const deletedRows = await db("jobs").where({ id }).del();
-    if (deletedRows === 0) {
-      return res.status(404).json({ message: "Job not found" });
-    }
-    res.status(200).json({ message: "Job deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting job:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
 const createJob = async (req, res) => {
-  const { customer_id } = req.body;
+  const { customer_id, fitter_id, start_date, end_date } = req.body;
   try {
     const result = await db("jobs")
       .insert({
         customer_id,
-        status: "unassigned",
+        fitter_id: fitter_id || null,
+        start_date,
+        end_date,
+        status: fitter_id ? "assigned" : "unassigned",
       })
       .returning("id");
 
@@ -307,7 +299,6 @@ module.exports = {
   getJob,
   getJobs,
   updateJob,
-  deleteJob,
   assignJobToFitter,
   proposeDates,
   acceptProposal,
