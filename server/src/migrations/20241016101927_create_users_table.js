@@ -5,7 +5,14 @@ exports.up = function (knex) {
     table.string("name").notNullable();
     table.string("email").unique().notNullable();
     table.string("password").notNullable();
+    table.string("mobile_number").unique();
+    table.boolean("is_mobile_verified").defaultTo(false);
+    table.string("mobile_verification_code");
+    table.timestamp("verified_at");
     table.timestamps(true, true);
+
+    table.index("email");
+    table.index("mobile_number");
   });
 };
 
