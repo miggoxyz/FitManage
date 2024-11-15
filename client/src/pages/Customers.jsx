@@ -15,7 +15,7 @@ const Customers = () => {
         });
         setCustomers(response.data);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError("Failed to fetch customers");
         setLoading(false);
       }

@@ -6,6 +6,7 @@ const { sendVerificationCode } = require("../utils/notificationService");
 
 const db = knex(knexConfig.development);
 
+// Register User Function
 const registerUser = async (req, res) => {
   const { name, email, password, phoneNumber } = req.body;
   try {
@@ -21,8 +22,10 @@ const registerUser = async (req, res) => {
       100000 + Math.random() * 900000
     ).toString();
 
+    // Send verification code to the user's phone number using Twilio
     await sendVerificationCode(phoneNumber, verificationCode);
 
+    // Insert user data into the database
     await db("users").insert({
       name,
       email,
@@ -42,6 +45,7 @@ const registerUser = async (req, res) => {
   }
 };
 
+// Login User Function
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -55,12 +59,14 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    if (!user.is_mobile_verified) {
-      return res.status(403).json({ message: "Phone number not verified" });
-    }
-
+    // Generate token with isVerified flag
     const token = jwt.sign(
-      { id: user.id, role: user.role, name: user.name },
+      {
+        id: user.id,
+        role: user.role,
+        name: user.name,
+        isVerified: user.is_mobile_verified,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -72,30 +78,27 @@ const loginUser = async (req, res) => {
   }
 };
 
+// Verify Code Function
 const verifyCode = async (req, res) => {
-  const { phoneNumber, verificationCode } = req.body;
+  const { verificationCode } = req.body;
+  const userId = req.user.id;
 
   try {
-    // Find the user by phone number and verification code
     const user = await db("users")
       .where({
-        mobile_number: phoneNumber,
+        id: userId,
         mobile_verification_code: verificationCode,
       })
       .first();
 
-    // If no user is found, return an error
     if (!user) {
-      return res
-        .status(400)
-        .json({ message: "Invalid verification code or phone number" });
+      return res.status(400).json({ message: "Invalid verification code" });
     }
 
-    // Update the user's verification status in the database
-    await db("users").where({ id: user.id }).update({
+    await db("users").where({ id: userId }).update({
       is_mobile_verified: true,
-      mobile_verification_code: null, // Clear the code after successful verification
-      verified_at: new Date(), // Set verification timestamp
+      mobile_verification_code: null,
+      verified_at: new Date(),
     });
 
     res.status(200).json({ message: "Phone number verified successfully" });
@@ -105,4 +108,39 @@ const verifyCode = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, verifyCode };
+// Resend Verification Code Function
+const resendVerificationCode = async (req, res) => {
+  const { userId } = req.user;
+  const { phoneNumber } = req.body;
+
+  try {
+    const newVerificationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+
+    // Send the new verification code via Twilio
+    await sendVerificationCode(phoneNumber, newVerificationCode);
+
+    // Update the user's phone number and verification code in the database
+    await db("users").where({ id: userId }).update({
+      mobile_number: phoneNumber,
+      mobile_verification_code: newVerificationCode,
+      is_mobile_verified: false,
+      verified_at: null,
+    });
+
+    res
+      .status(200)
+      .json({ message: "Verification code sent to the new phone number." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  verifyCode,
+  resendVerificationCode,
+};

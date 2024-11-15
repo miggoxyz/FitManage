@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import jwt_decode from "jwt-decode"; // Import jwt-decode to decode token
 import { saveToken } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -14,10 +15,26 @@ const Login = () => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
+
     try {
+      // Step 1: Attempt to log the user in
       const response = await axios.post("/api/auth/login", { email, password });
-      saveToken(response.data.token);
-      navigate("/");
+      const token = response.data.token;
+
+      if (token) {
+        // Step 2: Save the token
+        saveToken(token);
+
+        // Step 3: Decode the token to check the user's verification status
+        const decodedToken = jwt_decode(token);
+        if (decodedToken.isVerified) {
+          navigate("/"); // User is verified, proceed to main app
+        } else {
+          navigate("/verify-phone"); // User is not verified, proceed to verification page
+        }
+      } else {
+        throw new Error("Token is undefined. Login failed.");
+      }
     } catch (error) {
       setError(
         error.response?.data?.message ||

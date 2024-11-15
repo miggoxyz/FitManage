@@ -36,7 +36,7 @@ export default function CreateJob() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setFitters(fittersResponse.data);
-    } catch (error) {
+    } catch {
       setError("Failed to fetch data");
     }
   };
@@ -61,7 +61,7 @@ export default function CreateJob() {
       setIsCreatingCustomer(false);
       setSuccess("Customer created successfully. Now assign a job.");
       setError(null);
-    } catch (error) {
+    } catch {
       setError("Failed to create customer");
     }
   };
@@ -100,7 +100,7 @@ export default function CreateJob() {
       setSelectedFitter("");
       setStartDate("");
       setEndDate("");
-    } catch (error) {
+    } catch {
       setError("Failed to create job");
     }
   };

@@ -8,6 +8,7 @@ import Remedials from "./pages/Remedials";
 import Calendar from "./pages/Calendar";
 import Customers from "./pages/Customers";
 import CreateJob from "./pages/CreateJob";
+import VerifyPhone from "./pages/VerifyPhone"; // New import
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -17,6 +18,15 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route
+          path="/verify-phone"
+          element={
+            <ProtectedRoute>
+              {" "}
+              <VerifyPhone />
+            </ProtectedRoute>
+          }
+        />{" "}
         <Route
           path="/"
           element={
